@@ -1,3 +1,0 @@
-FROM joxit/docker-registry-ui:static
-LABEL maintainer="istone <istone@live.com>"
-

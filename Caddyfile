@@ -1,0 +1,38 @@
+{
+        servers :443 {
+                protocol {
+                        experimental_http3
+                }
+        }
+    email {$EMAIL}
+}
+
+lhcr.coolrc.me { #本地镜像
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+        file_server
+    reverse_proxy reg-ui:80
+}
+gcr.lhcr.coolrc.me { #gcr
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+    file_server
+    reverse_proxy reg-gcr:5000
+}
+k8s-gcr.lhcr.coolrc.me { #k8s
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+    file_server
+    reverse_proxy reg-k8s-gcr:5000
+}
+
+ghcr.lhcr.coolrc.me { #ghcr
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+    file_server
+    reverse_proxy reg-ghcr:5000
+}
