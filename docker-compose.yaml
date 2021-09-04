@@ -51,8 +51,10 @@ services:
       - local:reg-local
     environment:
       - REGISTRY_TITLE=Linuxhub Public Container Registry
-      - REGISTRY_URL=http://reg-local:5000
+      - NGINX_PROXY_PASS_URL=http://reg-local:5000
       - DELETE_IMAGES=true
+    env_file:
+      - .env
     networks:
       - registry-net
 

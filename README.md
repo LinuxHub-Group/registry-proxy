@@ -1,129 +1,94 @@
-# 搭建 Docker 镜像仓库代理
+# LinuxHub Public Container Registry
 
-在使用 Kubernetes 时，我们需要经常访问 gcr.io 镜像仓库，由于众所周知的原因，gcr.io 在中国无法访问。gcr.azk8s.cn 是 gcr.io 镜像仓库的代理站点，原来可以通过 gcr.azk8s.cn 访问 gcr.io 仓库里的镜像，但是目前 *.azk8s.cn 已经仅限于 Azure 中国的 IP 使用，不再对外提供服务了。为了能够顺利访问 gcr.io 镜像仓库，我们需要在墙外自己搭建一个类似于 gcr.azk8s.cn 镜像仓库代理站点。
+## 直接使用
 
-## 前提条件
+### 使用前必看!!!
 
-- 一台能够翻墙的服务器
-- 一个域名和域名相关的SSL证书（docker pull 镜像时需要验证域名证书）
+服务器存储空间比较小，如果你下载了不常用的大镜像，麻烦去<https://lhcr.coolrc.me:4433>手动删除掉，我们会定期清除镜像缓存
 
-## 安装配置 Docker
+镜像代理地址：
 
-### 添加 Docker yum 仓库
+- <https://lhcr.coolrc.me:4433> 主registry
+- <https://gcr.lhcr.coolrc.me:4433> gcr.io代理
+- <https://k8s-gcr.lhcr.coolrc.me:4433> k8s.gcr.io代理
+- <https://ghcr.lhcr.coolrc.me:4433> ghcr.io代理
 
-    $ yum install -y yum-utils
-    $ yum-config-manager \
-    --add-repo \
-    https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+### docker 使用 (不推荐，建议使用podman)
 
-### 安装 Docker
+docker不支持直接配置镜像代理，只能用最原始的方法，手动替换url使用：
 
-    $ yum install -y docker-ce docker-ce-cli containerd.io
+比如你本来要这个镜像
 
-### 配置 Docker
+```shell
+docker pull ghcr.io/linuxhub-group/caddy:latest
+```
 
-如下配置 Docker，设置 Docker 的日志格式为 json，日志文件大小为 100M，最多保存 3 个日志；接下来设置 Docker 镜像私有仓库和官方镜像加速地址；设置 Docker 的数据目录到 /data/docker；最后设置 Docker 的 Storage Driver 为 overlay2。
+现在可以这样
 
-    $ mkdir /etc/docker
-    $ cat << EOF > /etc/docker/daemon.json
-    {
-      "log-driver": "json-file",
-        "log-opts": {
-          "max-size": "100m",
-          "max-file": "3"
-        },
-      "insecure-registry": [
-        "hub.yyy.com"
-      ],
-      "registry-mirror": "https://q00c7e05.mirror.aliyuncs.com",
-      "data-root": "/data/docker",
-      "exec-opts": ["native.cgroupdriver=systemd"],
-      "storage-driver": "overlay2",
-      "storage-opts": [
-        "overlay2.override_kernel_check=true"
-      ]
-    }
-    EOF
+```shell
+docker pull ghcr.lhcr.coolrc.me:4433/linuxhub-group/caddy:latest
+```
 
-### 启动 Docker
+替换前面的地址就可以了
 
-    $ systemctl enable docker && systemctl start docker
+### Podman使用
 
-## 安装 Docker Compose
+Podman支持为不同registry设置代理，配置方式如下：
 
-    $ curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    $ chmod +x /usr/local/bin/docker-compose
-    $ ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-    $ docker-compose --version
-    docker-compose version 1.25.4, build 1110ad01
+```conf
+unqualified-search-registries = ['docker.io', 'k8s.gcr.io', 'gcr.io', 'ghcr.io', 'quay.io']
 
-## 启动镜像仓库代理
+[[registry]]
+prefix = "k8s.gcr.io"
+location = "k8s.gcr.io"
 
-### 启动前准备
+[[registry.mirror]]
+location = "k8s-gcr.lhcr.coolrc.me:4433"
 
-从 github 下载 registry-proxy 配置文件：
+[[registry]]
+prefix = "gcr.io"
+location = "gcr.io"
 
-    $ git clone https://github.com/findsec-cn/registry-proxy.git
-    $ cd registry-proxy
+[[registry.mirror]]
+location = "gcr.lhcr.coolrc.me:4433"
 
-将域名的证书放置到 cert 目录下，其中 server.crt 为 ssl 证书文件， server.key 为 ssl 私钥。
+[[registry]]
+prefix = "ghcr.io"
+location = "ghcr.io"
 
-修改 nginx.conf 配置文件，将配置文件中的域名替换成自己的域名(yyy.com)：
+[[registry.mirror]]
+location = "ghcr.lhcr.coolrc.me:4433"
+```
 
-    $ sed -i 's/xxx.com/yyy.com/g' nginx.conf
+### Containerd
 
-### 启动镜像仓库代理
+编辑`/etc/containerd/config.toml`
 
-启动镜像仓库代理：
+```toml
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."k8s.gcr.io"]
+          endpoint = ["https://k8s-gcr.lhcr.coolrc.me:4433"]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."gcr.io"]
+          endpoint = ["https://gcr.lhcr.coolrc.me:4433"]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."ghcr.io"]
+          endpoint = ["https://ghcr.lhcr.coolrc.me:4433"]
+```
 
-    $ docker-compose up -d
+然后重启Containerd：
 
-查看启动日志：
+```shell
+systemctl restart containerd.service
+```
 
-    $ docker-compose logs -f
+## 部署
 
-### 解析域名
+将`.env.example`修改为`.env`文件，填入你的email和[cloudflare api token](https://dash.cloudflare.com/profile/api-tokens) (用于自动获取证书)
 
-将 hub.yyy.com、gcr.yyy.com 解析到此服务器的地址上。
+然后`docker-compose up`就可以。
 
-我们可以通过 http://hub.yyy.com 查看镜像仓库缓存的镜像；可以通过gcr.yyy.com下载镜像。
+## 感谢
 
-## 使用镜像仓库代理
-
-**我们只需要将 k8s.gcr.io 替换成 gcr.yyy.com/google-containers；将 gcr.io 替换成 gcr.yyy.com 就可以下载 gcr.io 仓库里的镜像了。**
-
-比如我们要下载镜像：
-
-    $ docker pull k8s.gcr.io/pause:3.1
-
-可以如下通过镜像仓库代理下载：
-
-    $ docker pull gcr.yyy.com/google-containers/pause:3.1
-
-比如我们要下载镜像：
-
-    $ gcr.io/kubernetes-helm/tiller:v2.16.3
-    $ gcr.io/google-containers/etcd:3.2.24
-
-可以如下通过镜像仓库代理下载：
-
-    $ gcr.yyy.com/kubernetes-helm/tiller:v2.16.3
-    $ gcr.yyy.com/google-containers/etcd:3.2.24
-
-如果你用 kubeadm 部署 Kubernetes 集群，可以在 kubeadm 配置文件中设置镜像地址为：gcr.yyy.com/google-containers
-
-    $ cat kubeadm-config.yaml
-
-    apiVersion: kubeadm.k8s.io/v1beta1
-    kind: ClusterConfiguration
-    kubernetesVersion: v1.18.1
-    ......
-    imageRepository: gcr.yyy.com/google-containers
-
-更多文章请关注我们的微信公众号：
-
-![微信公众号](https://github.com/findsec-cn/registry-proxy/raw/master/imgs/wechat.jpg)
-
-也可以加入 Kubernetes 技术实战 QQ 群一起交流学习：
-
-![QQ群](https://github.com/findsec-cn/registry-proxy/raw/master/imgs/qq.jpg)
+- 感谢 <https://zhuanlan.zhihu.com/p/352870804> 的使用教程
+- 感谢原作者提出的方案
+- 感谢热心群友赞助的服务器
