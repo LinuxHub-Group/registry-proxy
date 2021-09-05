@@ -33,7 +33,7 @@ docker pull ghcr.lhcr.coolrc.me:4433/linuxhub-group/caddy:latest
 
 ### Podman使用
 
-Podman支持为不同registry设置代理，配置方式如下：
+Podman支持为不同registry设置代理，修改`/etc/containers/registries.conf`配置方式如下：
 
 ```conf
 unqualified-search-registries = ['docker.io', 'k8s.gcr.io', 'gcr.io', 'ghcr.io', 'quay.io']
