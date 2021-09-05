@@ -31,7 +31,9 @@ docker pull ghcr.lhcr.coolrc.me:4433/linuxhub-group/caddy:latest
 
 替换前面的地址就可以了
 
-### Podman使用
+### Podman使用 (墙裂推荐)
+
+关于从docker到podman的迁移请看这个：[从docker迁移到podman，支持docker-compose](https://coolrc.me/2021/09/05/202109051825/)
 
 Podman支持为不同registry设置代理，修改`/etc/containers/registries.conf`配置方式如下：
 
