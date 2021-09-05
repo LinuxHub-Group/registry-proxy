@@ -2,7 +2,7 @@
 
 ## 直接使用
 
-### 使用前必看!!!
+### 使用前必看
 
 服务器存储空间比较小，如果你下载了不常用的大镜像，麻烦去<https://lhcr.coolrc.me:4433>手动删除掉，我们会定期清除镜像缓存
 
@@ -88,6 +88,8 @@ systemctl restart containerd.service
 将`.env.example`修改为`.env`文件，填入你的email和[cloudflare api token](https://dash.cloudflare.com/profile/api-tokens) (用于自动获取证书)
 
 然后`docker-compose up`就可以。
+
+如果需要定期清理，可以把`disk_usage.sh`加入corn job,(`disk_usage.sh`只会清理已经在ui里软删除的文件)。
 
 ## 感谢
 

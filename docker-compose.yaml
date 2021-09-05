@@ -7,7 +7,7 @@ services:
     environment:
       - DELETE_ENABLED=true
     volumes:
-      - ~/data/registry:/var/lib/registry
+      - ./.data/registry:/var/lib/registry
     ports:
       - 5000:5000
     networks:
@@ -19,7 +19,7 @@ services:
     environment:
       - PROXY_REMOTE_URL=https://gcr.io
     volumes:
-      - ~/data/registry:/var/lib/registry
+      - ./.data/registry:/var/lib/registry
     networks:
       - registry-net
   k8s-gcr:
@@ -29,7 +29,7 @@ services:
     environment:
       - PROXY_REMOTE_URL=https://k8s.gcr.io
     volumes:
-      - ~/data/registry:/var/lib/registry
+      - ./.data/registry:/var/lib/registry
     networks:
       - registry-net
   ghcr:
@@ -39,7 +39,7 @@ services:
     environment:
       - PROXY_REMOTE_URL=https://ghcr.io
     volumes:
-      - ~/data/registry:/var/lib/registry
+      - ./.data/registry:/var/lib/registry
     networks:
       - registry-net
   
