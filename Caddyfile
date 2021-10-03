@@ -11,22 +11,22 @@ lhcr.coolrc.me { #本地镜像
     tls {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
-        file_server
-    reverse_proxy reg-ui:80
+    file_server
+    reverse_proxy localhost:801
 }
 gcr.lhcr.coolrc.me { #gcr
     tls {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
     file_server
-    reverse_proxy reg-gcr:5000
+    reverse_proxy localhost:5001
 }
 k8s-gcr.lhcr.coolrc.me { #k8s
     tls {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
     file_server
-    reverse_proxy reg-k8s-gcr:5000
+    reverse_proxy localhost:5002
 }
 
 ghcr.lhcr.coolrc.me { #ghcr
@@ -34,5 +34,6 @@ ghcr.lhcr.coolrc.me { #ghcr
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
     file_server
-    reverse_proxy reg-ghcr:5000
+    reverse_proxy localhost:5003
 }
+

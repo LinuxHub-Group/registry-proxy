@@ -4,14 +4,14 @@
 
 ### 使用前必看
 
-服务器存储空间比较小，如果你下载了不常用的大镜像，麻烦去<https://lhcr.coolrc.me:4433>手动删除掉，我们会定期清除镜像缓存
+服务器存储空间比较小，如果你下载了不常用的大镜像，麻烦去<https://lhcr.coolrc.me>手动删除掉，我们会定期清除镜像缓存
 
 镜像代理地址：
 
-- <https://lhcr.coolrc.me:4433> 主registry
-- <https://gcr.lhcr.coolrc.me:4433> gcr.io代理
-- <https://k8s-gcr.lhcr.coolrc.me:4433> k8s.gcr.io代理
-- <https://ghcr.lhcr.coolrc.me:4433> ghcr.io代理
+- <https://lhcr.coolrc.me> 主registry
+- <https://gcr.lhcr.coolrc.me> gcr.io代理
+- <https://k8s-gcr.lhcr.coolrc.me> k8s.gcr.io代理
+- <https://ghcr.lhcr.coolrc.me> ghcr.io代理
 
 ### docker 使用 (不推荐，建议使用podman)
 
@@ -26,7 +26,7 @@ docker pull ghcr.io/linuxhub-group/caddy:latest
 现在可以这样
 
 ```shell
-docker pull ghcr.lhcr.coolrc.me:4433/linuxhub-group/caddy:latest
+docker pull ghcr.lhcr.coolrc.me/linuxhub-group/caddy:latest
 ```
 
 替换前面的地址就可以了
@@ -45,21 +45,21 @@ prefix = "k8s.gcr.io"
 location = "k8s.gcr.io"
 
 [[registry.mirror]]
-location = "k8s-gcr.lhcr.coolrc.me:4433"
+location = "k8s-gcr.lhcr.coolrc.me"
 
 [[registry]]
 prefix = "gcr.io"
 location = "gcr.io"
 
 [[registry.mirror]]
-location = "gcr.lhcr.coolrc.me:4433"
+location = "gcr.lhcr.coolrc.me"
 
 [[registry]]
 prefix = "ghcr.io"
 location = "ghcr.io"
 
 [[registry.mirror]]
-location = "ghcr.lhcr.coolrc.me:4433"
+location = "ghcr.lhcr.coolrc.me"
 ```
 
 ### Containerd
@@ -70,11 +70,11 @@ location = "ghcr.lhcr.coolrc.me:4433"
     [plugins."io.containerd.grpc.v1.cri".registry]
       [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
         [plugins."io.containerd.grpc.v1.cri".registry.mirrors."k8s.gcr.io"]
-          endpoint = ["https://k8s-gcr.lhcr.coolrc.me:4433"]
+          endpoint = ["https://k8s-gcr.lhcr.coolrc.me"]
         [plugins."io.containerd.grpc.v1.cri".registry.mirrors."gcr.io"]
-          endpoint = ["https://gcr.lhcr.coolrc.me:4433"]
+          endpoint = ["https://gcr.lhcr.coolrc.me"]
         [plugins."io.containerd.grpc.v1.cri".registry.mirrors."ghcr.io"]
-          endpoint = ["https://ghcr.lhcr.coolrc.me:4433"]
+          endpoint = ["https://ghcr.lhcr.coolrc.me"]
 ```
 
 然后重启Containerd：
@@ -86,8 +86,7 @@ systemctl restart containerd.service
 ## 部署
 
 将`.env.example`修改为`.env`文件，填入你的email和[cloudflare api token](https://dash.cloudflare.com/profile/api-tokens) (用于自动获取证书)
-
-然后`docker-compose up`就可以。
+使用项目提供的Caddyfile进行反代
 
 如果需要定期清理，可以把`disk_usage.sh`加入corn job,(`disk_usage.sh`只会清理已经在ui里软删除的文件)。
 

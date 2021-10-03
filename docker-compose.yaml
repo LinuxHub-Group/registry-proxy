@@ -10,8 +10,7 @@ services:
       - ./.data/registry:/var/lib/registry
     ports:
       - 5000:5000
-    networks:
-      - registry-net
+
   gcr:
     container_name: reg-gcr
     image: findsec/registry-proxy:latest
@@ -20,8 +19,9 @@ services:
       - PROXY_REMOTE_URL=https://gcr.io
     volumes:
       - ./.data/registry:/var/lib/registry
-    networks:
-      - registry-net
+    ports:
+      - 5001:5000
+
   k8s-gcr:
     container_name: reg-k8s-gcr
     image: findsec/registry-proxy:latest
@@ -30,8 +30,9 @@ services:
       - PROXY_REMOTE_URL=https://k8s.gcr.io
     volumes:
       - ./.data/registry:/var/lib/registry
-    networks:
-      - registry-net
+    ports:
+      - 5002:5000
+
   ghcr:
     container_name: reg-ghcr
     image: findsec/registry-proxy:latest
@@ -40,45 +41,19 @@ services:
       - PROXY_REMOTE_URL=https://ghcr.io
     volumes:
       - ./.data/registry:/var/lib/registry
-    networks:
-      - registry-net
+    ports:
+      - 5003:5000
   
   ui:
     container_name: reg-ui
     image: joxit/docker-registry-ui
     restart: always
-    links:
-      - local:reg-local
     environment:
       - REGISTRY_TITLE=Linuxhub Public Container Registry
       - NGINX_PROXY_PASS_URL=http://reg-local:5000
       - DELETE_IMAGES=true
     env_file:
       - .env
-    networks:
-      - registry-net
-
-  caddy:
-    container_name: reg-caddy
-    image: ghcr.io/linuxhub-group/caddy
-    restart: always
     ports:
-      - 80:80
-      - 443:443
-    links:
-      - ui:reg-ui
-      - gcr:reg-gcr
-      - k8s-gcr:reg-k8s-gcr
-      - ghcr:reg-ghcr
-    volumes: 
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./.caddy/data:/data
-      - ./.caddy/config/:/config
-    networks:
-      - registry-net
-    env_file:
-      - .env
-
-networks:
-  registry-net:
+      - 801:80
 
